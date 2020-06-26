@@ -1,3 +1,69 @@
+<?php
+	require_once('connect.php');
+
+	$message="";
+	$message1="";
+
+
+
+	if(isset($_POST["register"]))
+	{
+		if(empty($_POST["newuser"]) || (empty($_POST["newpw"])) || (empty($_POST["cnewpw"])))
+		{
+			$message = "All fields must be completed";
+		}
+		else if($_POST["newpw"] !== $_POST["cnewpw"])
+		{
+			$message = "Passwords don't matched";
+		}
+		else
+		{
+			try
+			{
+				$user = $_POST["newuser"];
+				$pass = $_POST["newpw"];
+				$query = "SELECT COUNT(username) AS num FROM client WHERE username = '$user'";
+				$statement = $connect->prepare($query);
+				$statement->bindValue(':username', $user);
+				$statement->execute(
+					array (
+						':username' => $user
+					)
+				);
+				$row = $statement->fetch(PDO::FETCH_ASSOC);
+
+				if($row['num'] > 0)
+				{
+					$message = "That username already exists";
+				}
+				else
+				{
+					$passwordHash = password_hash($_POST["newpw"], PASSWORD_BCRYPT, array("cost" => 12));
+
+					$query = "INSERT INTO client (username, passwordd) VALUES ('$user', '$pass')";
+					$statement = $connect->prepare($query);
+					$statement->bindValue(':username', $user);
+					$statement->bindValue(':passwordd', $passwordHash);
+
+					$result = $statement->execute();
+
+					if($result)
+					{
+						$message = "Account created";
+						$messag1 = "Please login ";
+
+					}
+				}
+			}
+			catch(PDOException $e) {
+				echo $e->getmessage();
+				exit();
+			}
+		}
+	}
+
+?>
+
 <html>
 	<style>
 		body {
